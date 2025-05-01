@@ -51,9 +51,7 @@ running command. Defaults to \code{FALSE}.}
 The normalized path to the output file.
 }
 \description{
-Creates geographical extracts from an OSM data file or an OSM history file.
-The geographical extent can be given either as a bounding box or as a
-(multi)polygon.
+This is a wrapper for \href{https://docs.osmcode.org/osmium/latest/osmium-extract.html}{osmium extract}. Creates geographical extracts from an OSM data file or an OSM history file. The geographical extent can be given either as a bounding box or as a (multi)polygon.
 }
 \section{Strategies}{
 

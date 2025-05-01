@@ -1,8 +1,6 @@
 #' Create geographical extracts from an OSM file
 #'
-#' Creates geographical extracts from an OSM data file or an OSM history file.
-#' The geographical extent can be given either as a bounding box or as a
-#' (multi)polygon.
+#' This is a wrapper for [osmium extract](https://docs.osmcode.org/osmium/latest/osmium-extract.html). Creates geographical extracts from an OSM data file or an OSM history file. The geographical extent can be given either as a bounding box or as a (multi)polygon.
 #'
 #' @param input_path A string. The path to the OSM data/history file whose
 #'   extent should be extracted from. Please see [file_formats] for a list of
@@ -89,15 +87,17 @@
 #' file.size(output_path)
 #'
 #' @export
-extract <- function(input_path,
-                    extent,
-                    output_path,
-                    strategy = c("complete_ways", "smart", "simple"),
-                    overwrite = FALSE,
-                    echo_cmd = FALSE,
-                    echo = TRUE,
-                    spinner = TRUE,
-                    verbose = FALSE) {
+extract <- function(
+  input_path,
+  extent,
+  output_path,
+  strategy = c("complete_ways", "smart", "simple"),
+  overwrite = FALSE,
+  echo_cmd = FALSE,
+  echo = TRUE,
+  spinner = TRUE,
+  verbose = FALSE
+) {
   assert_osmium_is_installed()
 
   checkmate::assert_file_exists(input_path)
@@ -204,10 +204,12 @@ check_extent <- function(extent) {
     }
 
     geometry_type <- as.character(sf::st_geometry_type(extent))
-    if (! geometry_type %in% c("POLYGON", "MULTIPOLYGON")) {
+    if (!geometry_type %in% c("POLYGON", "MULTIPOLYGON")) {
       msg <- paste0(
         "Geometry type of sf object must be either POLYGON or MULTIPOLYGON. ",
-        "Found ", geometry_type, " instead"
+        "Found ",
+        geometry_type,
+        " instead"
       )
 
       if (geometry_type == "GEOMETRYCOLLECTION") {
