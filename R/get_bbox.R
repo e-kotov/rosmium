@@ -82,7 +82,7 @@ osm_get_bbox <- function(
     boxes_list <- list()
   }
 
-  # filter only well‐formed vectors
+  # filter only well formed vectors
   boxes_list <- Filter(function(x) is.numeric(x) && length(x) == 4, boxes_list)
 
   n_boxes <- length(boxes_list)
@@ -121,7 +121,7 @@ osm_get_bbox <- function(
   # no header boxes
   if (!calculate) {
     stop(
-      sprintf("No bounding‐box header found in '%s'.\n", input_path),
+      sprintf("No bounding-box header found in '%s'.\n", input_path),
       "Use calculate = TRUE to compute the bbox from the data (this may be slow as it reads the entire file)."
     )
   }
