@@ -89,3 +89,33 @@ test_that("osm_get_bbox rejects non-logical inputs", {
   expect_error(osm_get_bbox(pbf, verbose = NULL), "Assertion on")
   expect_error(osm_get_bbox(pbf, progress = "maybe"), "Assertion on")
 })
+
+# Test multiple header bounding boxes
+test_that("osm_get_bbox handles multiple header boxes", {
+  # Create a minimal OSM XML file with two <bounds> entries
+  xml_content <- c(
+    '<osm version="0.6" generator="test">',
+    '  <bounds minlat="0" minlon="1" maxlat="2" maxlon="3"/>',
+    '  <bounds minlat="4" minlon="5" maxlat="6" maxlon="7"/>',
+    '</osm>'
+  )
+  tmp_osm <- tempfile(fileext = ".osm")
+  writeLines(xml_content, tmp_osm)
+
+  # Expect an error if return_bbox_list = FALSE (default)
+  expect_error(
+    osm_get_bbox(tmp_osm),
+    "Found 2 header bounding boxes; to retrieve them all, retry with return_bbox_list = TRUE."
+  )
+
+  # With return_bbox_list = TRUE, should return two bbox objects
+  L2 <- osm_get_bbox(tmp_osm, return_bbox_list = TRUE)
+  expect_type(L2, "list")
+  expect_length(L2, 2)
+  b1 <- as.numeric(L2[[1]])
+  b2 <- as.numeric(L2[[2]])
+
+  # Check numeric contents: xmin, ymin, xmax, ymax
+  expect_equal(b1, c(1, 0, 3, 2), tolerance = 1e-8)
+  expect_equal(b2, c(5, 4, 7, 6), tolerance = 1e-8)
+})
