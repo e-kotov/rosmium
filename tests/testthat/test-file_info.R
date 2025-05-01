@@ -44,3 +44,70 @@ test_that("osm_file_info returns correct structure for cur.osm.pbf", {
   expect_type(t, "character")
   expect_true(grepl("Bounding boxes", t))
 })
+
+test_that("osm_file_info errors on missing file", {
+  expect_error(
+    osm_file_info("no_such_file.osm.pbf"),
+    "File does not exist",
+    ignore.case = TRUE
+  )
+})
+
+
+test_that("osm_file_info rejects bad output arg", {
+  pbf <- system.file("extdata/cur.osm.pbf", package = "rosmium")
+  expect_error(
+    osm_file_info(pbf, output = "xml"),
+    "should be one of"
+  )
+})
+
+test_that("osm_file_info get=boxes returns text with only generator", {
+  pbf <- system.file("extdata/cur.osm.pbf", package = "rosmium")
+  # get generator in text mode
+  out <- osm_file_info(pbf, get = "boxes", output = "text")
+  expect_true(grepl("boxes=", out))
+  expect_false(grepl("generator", out))
+})
+
+test_that("osm_file_info crc=TRUE adds crc field", {
+  pbf <- system.file("extdata/cur.osm.pbf", package = "rosmium")
+  j <- osm_file_info(pbf, output = "list", crc = TRUE, extended = TRUE)
+  expect_true("crc32" %in% names(j$data))
+  expect_true(is.character(j$data$crc32))
+})
+
+
+test_that("osm_file_info extended=TRUE returns data element", {
+  pbf <- system.file("extdata/cur.osm.pbf", package = "rosmium")
+  info_ext <- osm_file_info(pbf, output = "list", extended = TRUE)
+  expect_true(is.list(info_ext$data))
+  expect_true(all(c("bbox", "timestamp", "count") %in% names(info_ext$data)))
+})
+
+test_that("osm_file_info warns if object_type used without extended", {
+  pbf <- system.file("extdata/cur.osm.pbf", package = "rosmium")
+  expect_warning(
+    osm_file_info(pbf, output = "list", object_type = c("node", "way")),
+    "`object_type` only applies when `extended = TRUE`"
+  )
+})
+
+test_that("osm_file_info respects progress argument", {
+  pbf <- system.file("extdata/cur.osm.pbf", package = "rosmium")
+  # capture the command via echo_cmd so we can inspect it
+  expect_output(
+    osm_file_info(pbf, output = "text", echo_cmd = TRUE, progress = TRUE),
+    "--progress"
+  )
+  expect_output(
+    osm_file_info(pbf, output = "text", echo_cmd = TRUE, progress = FALSE),
+    "--no-progress"
+  )
+})
+
+test_that("osm_file_info_variables returns a list of variable names", {
+  vars <- osm_file_info_variables()
+  expect_type(vars, "character")
+  expect_true(all(c("file.name", "file.size") %in% vars))
+})

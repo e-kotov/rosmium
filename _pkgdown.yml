@@ -11,6 +11,7 @@ reference:
   - title: "Functions"
   - contents:
     - osm_file_info
+    - osm_file_info_variables
     - extract
     - tags_filter
     - show_content
