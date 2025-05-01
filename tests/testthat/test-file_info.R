@@ -37,7 +37,7 @@ test_that("osm_file_info returns correct structure for cur.osm.pbf", {
 
   # ---- output="json" ----
   j <- osm_file_info(pbf, output = "json")
-  expect_true(jsonlite::validate(j))
+  expect_true(RcppSimdJson::is_valid_json(j))
 
   # ---- output="text" ----
   t <- osm_file_info(pbf, output = "text")
