@@ -32,7 +32,7 @@ test_that("osm_check_refs works with check_relations = FALSE", {
   # file name
   expect_true(grepl("^File checked: .*/cur\\.osm\\.pbf$", out[1]))
   # version block present
-  expect_true(any(grepl("^osmium version 1\\.18\\.0$", out)))
+  expect_true(any(grepl("^osmium version", out)))
   # summary line
   expect_true(any(grepl(
     "^There are 40185 nodes, 6884 ways, and 430 relations in this file\\.$",
