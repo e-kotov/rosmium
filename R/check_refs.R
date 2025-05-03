@@ -118,7 +118,8 @@ parse_osm_check_refs_log <- function(
     raw$summary_line
   )
   nums <- as.integer(regmatches(raw$summary_line, m_tot)[[1]][2:4])
-  totals <- setNames(nums, c("nodes", "ways", "relations"))
+  names(nums) <- c("nodes", "ways", "relations")
+  totals <- nums
 
   # missing
   patterns <- c(
