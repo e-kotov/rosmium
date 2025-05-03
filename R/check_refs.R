@@ -5,10 +5,10 @@
 #'
 #' @param input_path String. Path to an existing OSM data file (not history or change file).
 #' @param show_ids A logical. If `TRUE`, print all missing IDs to stdout. Defaults to `FALSE`.
-#' @param check_relations A logical. If `TRUE`, also check relations’ references. Defaults to `FALSE`.
+#' @param check_relations A logical. If `TRUE`, also check relations references. Defaults to `FALSE`.
 #' @param input_format Optional string. Force input format (e.g. "osm", "pbf"). If `NULL`, autodetect.
 #' @param echo_cmd A logical. Whether to print the generated Osmium command. Defaults to `FALSE`.
-#' @param echo A logical. Whether to print Osmium’s stdout/stderr. Defaults to `TRUE`.
+#' @param echo A logical. Whether to print Osmium's stdout/stderr. Defaults to `TRUE`.
 #' @param spinner A logical. Whether to show a spinner during execution. Defaults to `TRUE`.
 #' @param verbose A logical. Whether to pass `--verbose` to Osmium for detailed logging. Defaults to `TRUE`.
 #' @param progress A logical. Whether to pass `--progress` / `--no-progress`. Defaults to `FALSE`.
@@ -213,7 +213,7 @@ print.osm_check_refs_log <- function(x, ...) {
   # note if relations were not checked
   if (!isTRUE(md$request_check_rels)) {
     cat(
-      "\nNote: relations were not checked; relation‐level missing counts are omitted.\n You can run `osm_check_refs()` with `check_relations=TRUE` to check relations.\n"
+      "\nNote: relations were not checked. Relation-level missing counts are omitted.\n You can run `osm_check_refs()` with `check_relations=TRUE` to check relations.\n"
     )
   }
 

@@ -21,13 +21,13 @@ osm_check_refs(
 
 \item{show_ids}{A logical. If \code{TRUE}, print all missing IDs to stdout. Defaults to \code{FALSE}.}
 
-\item{check_relations}{A logical. If \code{TRUE}, also check relations’ references. Defaults to \code{FALSE}.}
+\item{check_relations}{A logical. If \code{TRUE}, also check relations references. Defaults to \code{FALSE}.}
 
 \item{input_format}{Optional string. Force input format (e.g. "osm", "pbf"). If \code{NULL}, autodetect.}
 
 \item{echo_cmd}{A logical. Whether to print the generated Osmium command. Defaults to \code{FALSE}.}
 
-\item{echo}{A logical. Whether to print Osmium’s stdout/stderr. Defaults to \code{TRUE}.}
+\item{echo}{A logical. Whether to print Osmium's stdout/stderr. Defaults to \code{TRUE}.}
 
 \item{spinner}{A logical. Whether to show a spinner during execution. Defaults to \code{TRUE}.}
 
