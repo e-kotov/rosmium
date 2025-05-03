@@ -21,8 +21,7 @@ osm_file_info(
 \arguments{
 \item{input_path}{String. Path to the OSM file.}
 
-\item{extended}{A logical. Read the entire file (not just header)? Defaults to \code{FALSE}.
-Required for full data and metadata sections.}
+\item{extended}{A logical(1). Read the entire file (not just header)? Defaults to \code{FALSE}. Reading extended info may be slow, as it reads the entire file. This is also required if the file does not have a bounding box in the header, and you need to calculate it from the data. Specifically, to get or calculate the bounding box, you need can use the \link{osm_get_bbox} function.}
 
 \item{get}{String or NULL. If non-NULL, returns only this variable's value (using \verb{--get=}). Must be a full CLI variable name (e.g. \code{file.name}, \code{header.option.generator}, \code{data.bbox}, or any other supported variable listed by \verb{osmium fileinfo --show-variables}). A shorthand of \code{"generator"} is recognized and maps to \code{header.option.generator}. To get the list of valid variable names, use \code{osm_file_info_variables()}.}
 
@@ -56,9 +55,13 @@ the command. Defaults to \code{FALSE}.}
 }
 }
 \description{
-Wrapper around \href{https://docs.osmcode.org/osmium/latest/osmium-fileinfo.html}{osmium fileinfo}.
-Retrieves metadata from an OSM (or PBF) file in various formats, fetches a single variable,
-or lists available variables.
+This is a wrapper for \href{https://docs.osmcode.org/osmium/latest/osmium-fileinfo.html}{osmium fileinfo}.
+Returns OSM file & header info in three possible formats:
+\itemize{
+\item \code{"text"}: the original plain‐text dump
+\item \code{"json"}: the raw JSON string emitted by \code{--json}
+\item \code{"list"}: the JSON parsed to an R list via \code{RcppSimdJson::fparse()}
+}
 }
 \examples{
 \dontshow{if (identical(tolower(Sys.getenv("NOT_CRAN")), "true")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
