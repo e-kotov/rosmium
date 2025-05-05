@@ -56,6 +56,8 @@
 #'   Osmium call is being executed. Defaults to `TRUE`.
 #' @param verbose A logical. Whether to display detailed information on the
 #'   running command. Defaults to `FALSE`.
+#' @param progress A logical. Whether to display a progress bar while running
+#'   the command. Defaults to `FALSE`.
 #'
 #' @return Invisibly returns the normalised \code{output_path}.
 #'

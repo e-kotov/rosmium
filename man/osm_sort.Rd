@@ -63,6 +63,9 @@ Osmium call is being executed. Defaults to \code{TRUE}.}
 
 \item{verbose}{A logical. Whether to display detailed information on the
 running command. Defaults to \code{FALSE}.}
+
+\item{progress}{A logical. Whether to display a progress bar while running
+the command. Defaults to \code{FALSE}.}
 }
 \value{
 Invisibly returns the normalised \code{output_path}.

@@ -17,7 +17,7 @@
 #' If `sort_before_merge = TRUE`, each input file is first piped through
 #' [`osm_sort()`] (using the default `"simple"` strategy) into a temporary
 #' file.  This strategy is fast but can require **about 10x the on-disk size
-#' of a `.pbf`/`.osm.bz2` file in memory**.  See [`?osm_sort`] for
+#' of a `.pbf`/`.osm.bz2` file in memory**.  See [`osm_sort()`] for
 #' details.  Temporary files are deleted automatically at the end of the
 #' R session.  If you need permanent, sorted copies, call
 #' [`osm_sort()`] yourself and set the desired output path.
@@ -58,13 +58,73 @@
 #'   Osmium call is being executed. Defaults to `TRUE`.
 #' @param verbose A logical. Whether to display detailed information on the
 #'   running command. Defaults to `FALSE`.
+#' @param progress A logical. Whether to display a progress bar while running
+#'   the command. Defaults to `FALSE`.
+#'
+#' @examplesIf identical(tolower(Sys.getenv("NOT_CRAN")), "true")
+#' pbf <- system.file("extdata/cur.osm.pbf", package = "rosmium")
+#'
+#' # 1. get header bbox (an sf::st_bbox)
+#' orig_bbox <- osm_get_bbox(pbf)
+#'
+#' # 2. split bbox in two halves by longitude
+#' midx <- (orig_bbox["xmin"] + orig_bbox["xmax"]) / 2
+#'
+#' bbox1 <- sf::st_bbox(
+#'   c(
+#'     xmin = orig_bbox[["xmin"]],
+#'     ymin = orig_bbox[["ymin"]],
+#'     xmax = unname(midx),
+#'     ymax = orig_bbox[["ymax"]]
+#'   ),
+#'   crs = sf::st_crs(orig_bbox)
+#' )
+#'
+#' bbox2 <- sf::st_bbox(
+#'   c(
+#'     xmin = unname(midx),
+#'     ymin = orig_bbox[["ymin"]],
+#'     xmax = orig_bbox[["xmax"]],
+#'     ymax = orig_bbox[["ymax"]]
+#'   ),
+#'   crs = sf::st_crs(orig_bbox)
+#' )
+#'
+#' # 3. extract two halves
+#' f1 <- extract(
+#'   pbf,
+#'   bbox1,
+#'   tempfile(fileext = ".osm.pbf"),
+#'   overwrite = TRUE,
+#'   echo = FALSE,
+#'   spinner = FALSE
+#' )
+#' f2 <- extract(
+#'   pbf,
+#'   bbox2,
+#'   tempfile(fileext = ".osm.pbf"),
+#'   overwrite = TRUE,
+#'   echo = FALSE,
+#'   spinner = FALSE
+#' )
+#'
+#' # 4. merge while ensuring sort
+#' merge_out <- tempfile(fileext = ".osm.pbf")
+#' merged <- osm_merge(
+#'   input_paths = c(f1, f2),
+#'   output_path = merge_out,
+#'   sort_before_merge = TRUE,
+#'   overwrite = TRUE,
+#'   echo = FALSE,
+#'   spinner = FALSE
+#' )
+#'
+#' # 5. compute bbox
+#' final_bbox <- osm_get_bbox(merged, calculate = TRUE)
 #'
 #' @return (Invisibly) the normalised `output_path`.
-#' @keywords internal
 #' @export
-#' @return (Invisibly) the normalised `output_path`.
-#' @keywords internal
-#' @export
+#'
 osm_merge <- function(
   input_paths,
   output_path,
