@@ -21,7 +21,7 @@ osm_check_refs <- function(
   check_relations = FALSE,
   input_format = NULL,
   echo_cmd = FALSE,
-  echo = TRUE,
+  echo = FALSE,
   spinner = TRUE,
   verbose = TRUE,
   progress = FALSE
@@ -65,7 +65,8 @@ osm_check_refs <- function(
     request_verbose = verbose,
     request_input_file = input_path
   )
-  invisible(parsed)
+
+  return(parsed)
 }
 
 #' Parse Osmium `check-refs` command output

@@ -10,7 +10,7 @@ osm_check_refs(
   check_relations = FALSE,
   input_format = NULL,
   echo_cmd = FALSE,
-  echo = TRUE,
+  echo = FALSE,
   spinner = TRUE,
   verbose = TRUE,
   progress = FALSE
