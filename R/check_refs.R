@@ -5,15 +5,23 @@
 #'
 #' @param input_path String. Path to an existing OSM data file (not history or change file).
 #' @param show_ids A logical. If `TRUE`, print all missing IDs to stdout. Defaults to `FALSE`.
-#' @param check_relations A logical. If `TRUE`, also check relations references. Defaults to `FALSE`.
+#' @param check_relations A logical. If `TRUE`, also check relations references. Defaults to `FALSE`, which only checks if any `nodes` in `ways`` are missing.
 #' @param input_format Optional string. Force input format (e.g. "osm", "pbf"). If `NULL`, autodetect.
 #' @param echo_cmd A logical. Whether to print the generated Osmium command. Defaults to `FALSE`.
-#' @param echo A logical. Whether to print Osmium's stdout/stderr. Defaults to `TRUE`.
+#' @param echo A logical. Whether to print Osmium's stdout/stderr. Defaults to `FALSE` to avoid duplication because the parsed output is printed to R console by default.
 #' @param spinner A logical. Whether to show a spinner during execution. Defaults to `TRUE`.
 #' @param verbose A logical. Whether to pass `--verbose` to Osmium for detailed logging. Defaults to `TRUE`.
 #' @param progress A logical. Whether to pass `--progress` / `--no-progress`. Defaults to `FALSE`.
 #'
-#' @return A character scalar: the plain-text output from `osmium check-refs`, invisibly returned if successful.
+#' @return A list of class `osm_check_refs_log`, containing:
+#'   - `status_code`: `integer`. Exit status from Osmium.
+#'   - `raw`: list of raw text captured from Osmium's stdout and stderr.
+#'   - `metadata`: list of the original `verbose` and `check_relations` settings.
+#'   - `summary`: data.frame of counts (present and missing references).
+#'
+#' When printed, provides a formatted summary about the check and possible
+#' warnings and errors.
+#'
 #' @export
 osm_check_refs <- function(
   input_path,
