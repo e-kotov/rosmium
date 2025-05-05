@@ -12,6 +12,7 @@ reference:
   - contents:
     - osm_file_info
     - osm_file_info_variables
+    - osm_check_refs
     - extract
     - tags_filter
     - show_content
@@ -19,6 +20,7 @@ reference:
     - osm_get_bbox
     - osm_set_bbox
     - osm_sort
+    - osm_merge
     - osm_cat
   - title: "General documentation"
   - contents:

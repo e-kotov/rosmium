@@ -1,42 +1,83 @@
-# File: R/merge.R
-
 #' Merge several sorted OSM files
 #'
-#' This is a wrapper for [osmium merge](https://docs.osmcode.org/osmium/latest/osmium-merge.html).
-#' Merges multiple sorted OSM files into a single output, removing duplicate objects.
-#' Optionally checks referential integrity of each input before merging.
+#' @description{
+#' Merges the content of all OSM files given on the command line into one large OSM file. Objects in all files must be sorted by type, ID, and version. The results will also be sorted in the same way. Objects that appear in multiple input files will only be in the output once. This is a wrapper for **[`osmium merge`](https://docs.osmcode.org/osmium/latest/osmium-merge.html)** that can optionally (1) run referential-integrity pre-flight checks with [`osm_check_refs()`], (2) force-sort each input with [`osm_sort()`], and then (3) perform the actual merge.
+#' ## 1. Referential-integrity checks
+#' Set `check_integrity` to
+#' | value          | what is checked                                       | implementation                         |
+#' |----------------|-------------------------------------------------------|----------------------------------------|
+#' | `"no"` *(def.)*| nothing                                               | -                                      |
+#' | `"simple"`     | *nodes referenced by ways* are present                | `osm_check_refs(check_relations = FALSE)` |
+#' | `"full"`       | additionally checks *all references inside relations* | `osm_check_refs(check_relations = TRUE)`  |
 #'
-#' @param input_paths A character vector of paths to one or more existing, sorted OSM files.
-#' @param output_path A string. Path to the file where the merged result will be written.
-#' @param check_integrity A string. One of "no", "simple", or "full". "no" (default) skips integrity checks;
-#'   "simple" runs [`osm_check_refs()`] without relation checks;
-#'   "full" runs [`osm_check_refs()`] with relation checks enabled.
-#' @param input_format A string or `NULL`. Force input format (e.g. "osm", "pbf"). If `NULL`, autodetect.
-#' @param output_format A string or `NULL`. Force output format (e.g. "osm", "pbf"). If `NULL`, autodetect.
-#' @param fsync A logical. If `TRUE`, call `fsync` after writing to force flushing buffers. Defaults to `FALSE`.
-#' @param generator A string or `NULL`. Name/version for the `generator` header. Defaults to Osmium’s own.
-#' @param overwrite A logical. If `TRUE`, allow overwriting an existing `output_path`. Defaults to `FALSE`.
-#' @param output_header A named character vector of additional header options. Each name is the header key,
-#'   each value is the header value. A zero‐length value (`""`) writes `OPTION!`. Defaults to `NULL`.
-#' @param echo_cmd A logical. Whether to print the generated Osmium command. Defaults to `FALSE`.
-#' @param echo A logical. Whether to print Osmium’s stdout/stderr. Defaults to `TRUE`.
-#' @param spinner A logical. Whether to show a spinner during execution. Defaults to `TRUE`.
-#' @param verbose A logical. Whether to pass `--verbose` to Osmium for detailed logging. Defaults to `FALSE`.
-#' @param progress A logical. Whether to pass `--progress` / `--no-progress`. Defaults to `FALSE`.
+#' If any check returns exit-status `1` (missing refs) **and**
+#' `stop_on_integrity_fail = TRUE`, the function **aborts** before merging.
 #'
-#' @return Invisibly returns the normalized path to `output_path`.
+#' ## 2. Optional *force-sort* step
+#' If `sort_before_merge = TRUE`, each input file is first piped through
+#' [`osm_sort()`] (using the default `"simple"` strategy) into a temporary
+#' file.  This strategy is fast but can require **about 10x the on-disk size
+#' of a `.pbf`/`.osm.bz2` file in memory**.  See [`?osm_sort`] for
+#' details.  Temporary files are deleted automatically at the end of the
+#' R session.  If you need permanent, sorted copies, call
+#' [`osm_sort()`] yourself and set the desired output path.
+#'
+#' ## 3. Memory usage during merge
+#' `osmium merge` itself needs only small buffers, but when merging **many**
+#' files those buffers can add up.  The optional sorting step generally
+#' dominates RAM usage.
+#'
+#'}
+#' @param input_paths      Character vector. Paths to one or more *existing*
+#'   **(preferably already-sorted)** OSM files.
+#' @param output_path      String. Where to write the merged result.
+#' @param check_integrity  One of:
+#'   - `"no"` *(default)*: no checks are made,
+#'   - `"simple"`: runs `osm_check_refs(check_relations = FALSE)` to check
+#'     that *nodes referenced by ways* are present,
+#'   - `"full"`: runs `osm_check_refs(check_relations = TRUE)` to check that
+#'     *all references inside relations* are present.
+#' @param stop_on_integrity_fail Logical. Abort on failed integrity check?
+#'   Default `FALSE`.
+#' @param sort_before_merge Logical. If `TRUE`, force-sort each input with
+#'   [`osm_sort()`] before merging.  Default `FALSE`.
+#' @param input_format,output_format Force I/O formats (`"pbf"`, `"osm"`, ...).
+#'   `NULL` lets Osmium autodetect.
+#' @param fsync            Logical. Pass **`--fsync`** to flush buffers.
+#' @param generator        Optional string for **`--generator`** header tag.
+#' @param overwrite        Logical. Allow overwriting `output_path`.
+#' @param output_header    Named character vector of extra header options
+#'   (`OPTION = "value"` or `OPTION = ""` to replicate input header via
+#'   the `OPTION!` shorthand).
+#' @param with_history     Logical. Pass **`--with-history`** to Osmium.
+#' @param echo_cmd A logical. Whether to print the Osmium command generated by
+#'   the function call to the screen. Defaults to `FALSE`.
+#' @param echo A logical. Whether to print the standard output and error
+#'   generated by the Osmium call to the screen. Defaults to `TRUE`.
+#' @param spinner A logical. Whether to show a reassuring spinner while the
+#'   Osmium call is being executed. Defaults to `TRUE`.
+#' @param verbose A logical. Whether to display detailed information on the
+#'   running command. Defaults to `FALSE`.
+#'
+#' @return (Invisibly) the normalised `output_path`.
+#' @keywords internal
+#' @export
+#' @return (Invisibly) the normalised `output_path`.
 #' @keywords internal
 #' @export
 osm_merge <- function(
   input_paths,
   output_path,
   check_integrity = "no",
+  stop_on_integrity_fail = FALSE,
+  sort_before_merge = FALSE,
   input_format = NULL,
   output_format = NULL,
   fsync = FALSE,
   generator = NULL,
   overwrite = FALSE,
   output_header = NULL,
+  with_history = FALSE,
   echo_cmd = FALSE,
   echo = TRUE,
   spinner = TRUE,
@@ -45,49 +86,42 @@ osm_merge <- function(
 ) {
   assert_osmium_is_installed()
 
-  ## Validate inputs
+  ## ---- argument validation --------------------------------------------------
   checkmate::assert_character(input_paths, any.missing = FALSE, min.len = 1)
-  for (p in input_paths) {
-    checkmate::assert_file_exists(p, access = "r")
-  }
+  for (p in input_paths) checkmate::assert_file_exists(p, access = "r")
   checkmate::assert_string(output_path)
 
-  ## check_integrity must be one of no/simple/full
   check_integrity <- match.arg(check_integrity, c("no", "simple", "full"))
   do_check <- check_integrity != "no"
-  check_rel_flag <- check_integrity == "full"
+  check_rels <- identical(check_integrity, "full")
+
+  checkmate::assert_flag(stop_on_integrity_fail)
+  checkmate::assert_flag(sort_before_merge)
 
   if (!is.null(input_format)) checkmate::assert_string(input_format)
   if (!is.null(output_format)) checkmate::assert_string(output_format)
-  checkmate::assert_logical(fsync, len = 1)
+  checkmate::assert_flag(fsync)
   if (!is.null(generator)) checkmate::assert_string(generator)
-  checkmate::assert_logical(overwrite, len = 1)
+  checkmate::assert_flag(overwrite)
   if (!is.null(output_header)) {
     checkmate::assert_named(output_header, type = "unique")
-    checkmate::assert_character(output_header)
+    checkmate::assert_character(output_header, any.missing = FALSE)
   }
-  checkmate::assert_logical(echo_cmd, len = 1)
-  checkmate::assert_logical(echo, len = 1)
-  checkmate::assert_logical(spinner, len = 1)
-  checkmate::assert_logical(verbose, len = 1)
-  checkmate::assert_logical(progress, len = 1)
+  checkmate::assert_flag(with_history)
+  checkmate::assert_flag(echo_cmd)
+  checkmate::assert_flag(echo)
+  checkmate::assert_flag(spinner)
+  checkmate::assert_flag(verbose)
+  checkmate::assert_flag(progress)
 
-  ## Prepare common flags
-  verbose_flag <- if (verbose) "--verbose" else character()
-  progress_flag <- if (progress) "--progress" else "--no-progress"
-  input_fmt_flag <- if (!is.null(input_format))
-    paste0("--input-format=", input_format) else character()
-  output_fmt_flag <- if (!is.null(output_format))
-    paste0("--output-format=", output_format) else character()
-
-  ## Optionally check referential integrity
+  ## ---- 1 referential‑integrity checks ------------------------------------
   if (do_check) {
     for (p in input_paths) {
-      print(paste0("Checking integrity of ", p, "..."))
-      osm_check_refs(
+      if (echo) cat("Checking integrity of", p, "...\n")
+      log <- osm_check_refs(
         input_path = p,
         show_ids = FALSE,
-        check_relations = check_rel_flag,
+        check_relations = check_rels,
         input_format = input_format,
         echo_cmd = echo_cmd,
         echo = echo,
@@ -95,43 +129,97 @@ osm_merge <- function(
         verbose = verbose,
         progress = progress
       )
+
+      if (
+        isTRUE(stop_on_integrity_fail) &&
+          !is.null(log$status_code) &&
+          log$status_code == 1L
+      ) {
+        stop(
+          sprintf(
+            "Referential integrity check failed for '%s' (missing references).",
+            p
+          ),
+          call. = FALSE
+        )
+      }
     }
   }
 
-  ## Build merge flags
+  ## ---- 2 optional force‑sort ---------------------------------------------
+  if (sort_before_merge) {
+    if (echo) cat("Sorting input files before merge (strategy = 'simple')...\n")
+
+    sorted_paths <- character(length(input_paths))
+    for (i in seq_along(input_paths)) {
+      in_file <- input_paths[i]
+      ext <- tools::file_ext(in_file)
+      tmp_file <- tempfile(fileext = if (nzchar(ext)) paste0(".", ext) else "")
+      osm_sort(
+        input_paths = in_file,
+        output_path = tmp_file,
+        strategy = "simple",
+        input_format = input_format,
+        output_format = output_format,
+        fsync = fsync,
+        generator = generator,
+        overwrite = TRUE,
+        echo_cmd = echo_cmd,
+        echo = echo,
+        spinner = spinner,
+        verbose = verbose,
+        progress = progress
+      )
+      sorted_paths[i] <- tmp_file
+    }
+    ## clean up temps when R session ends
+    old <- sorted_paths # capture for on.exit
+    on.exit(unlink(old, recursive = FALSE, force = TRUE), add = TRUE)
+    input_paths <- sorted_paths
+  }
+
+  ## ---- 3 build Osmium flags ----------------------------------------------
+  verbose_flag <- if (verbose) "--verbose" else character()
+  progress_flag <- if (progress) "--progress" else "--no-progress"
+  input_flag <- if (!is.null(input_format))
+    paste0("--input-format=", input_format) else character()
+  output_flag <- if (!is.null(output_format))
+    paste0("--output-format=", output_format) else character()
   fsync_flag <- if (fsync) "--fsync" else character()
   gen_flag <- if (!is.null(generator)) paste0("--generator=", generator) else
     character()
   overwrite_flag <- if (overwrite) "--overwrite" else character()
+  history_flag <- if (with_history) "--with-history" else character()
   header_flags <- if (!is.null(output_header)) {
     unname(vapply(
       names(output_header),
       function(nm) {
         val <- output_header[[nm]]
-        hdr <- if (nzchar(val)) paste0(nm, "=", val) else paste0(nm, "!")
-        paste0("--output-header=", hdr)
+        tag <- if (nzchar(val)) paste0(nm, "=", val) else paste0(nm, "!")
+        paste0("--output-header=", tag)
       },
       character(1)
     ))
   } else character()
-  output_flag <- paste0("--output=", output_path)
+  out_flag <- paste0("--output=", output_path)
 
-  ## run merge
+  ## ---- 4 run Osmium merge -------------------------------------------------
   args <- c(
     "merge",
     input_paths,
-    input_fmt_flag,
-    output_fmt_flag,
+    input_flag,
+    output_flag,
     fsync_flag,
     gen_flag,
-    output_flag,
+    out_flag,
     overwrite_flag,
+    history_flag,
     header_flags,
     verbose_flag,
     progress_flag
   )
 
-  logs <- processx::run(
+  processx::run(
     "osmium",
     args,
     echo = echo,
