@@ -1,7 +1,7 @@
 #' Merge several sorted OSM files
 #'
 #' @description{
-#' This is a wrapper for **[`osmium merge`](https://docs.osmcode.org/osmium/latest/osmium-merge.html)** that can optionally (1) run referential-integrity pre-flight checks with [`osm_check_refs()`], (2) force-sort each input with [`osm_sort()`], and then (3) perform the actual merge.
+#' Merges the content of all OSM files given on the command line into one large OSM file. Objects in all files must be sorted by type, ID, and version. The results will also be sorted in the same way. Objects that appear in multiple input files will only be in the output once. This is a wrapper for **[`osmium merge`](https://docs.osmcode.org/osmium/latest/osmium-merge.html)** that can optionally (1) run referential-integrity pre-flight checks with [`osm_check_refs()`], (2) force-sort each input with [`osm_sort()`], and then (3) perform the actual merge.
 #' ## 1. Referential-integrity checks
 #' Set `check_integrity` to
 #' | value          | what is checked                                       | implementation                         |

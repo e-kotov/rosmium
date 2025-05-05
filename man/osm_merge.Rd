@@ -79,7 +79,7 @@ running command. Defaults to \code{FALSE}.}
 }
 \description{
 {
-This is a wrapper for \strong{\href{https://docs.osmcode.org/osmium/latest/osmium-merge.html}{\verb{osmium merge}}} that can optionally (1) run referential-integrity pre-flight checks with \code{\link[=osm_check_refs]{osm_check_refs()}}, (2) force-sort each input with \code{\link[=osm_sort]{osm_sort()}}, and then (3) perform the actual merge.
+Merges the content of all OSM files given on the command line into one large OSM file. Objects in all files must be sorted by type, ID, and version. The results will also be sorted in the same way. Objects that appear in multiple input files will only be in the output once. This is a wrapper for \strong{\href{https://docs.osmcode.org/osmium/latest/osmium-merge.html}{\verb{osmium merge}}} that can optionally (1) run referential-integrity pre-flight checks with \code{\link[=osm_check_refs]{osm_check_refs()}}, (2) force-sort each input with \code{\link[=osm_sort]{osm_sort()}}, and then (3) perform the actual merge.
 \subsection{1. Referential-integrity checks}{
 
 Set \code{check_integrity} to\tabular{lll}{
